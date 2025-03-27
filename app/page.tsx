@@ -1,103 +1,125 @@
-import Image from "next/image";
+"use client";
+import Header from "@/components/Header";
+import TipButton from "@/components/TipButton";
+import TipInput from "@/components/TipInput";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DollarSign, User } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [bill, setBill] = useState("");
+  const [ppl, setPpl] = useState("");
+  const [tipPercentage, setTipPercentage] = useState(0);
+  const [tipPerPerson, setTipPerPerson] = useState(0);
+  const [totalPerPerson, setTotalPerPerson] = useState(0);
+  const [error, setError] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  useEffect(() => {
+    calculateTip();
+  }, [bill, ppl, tipPercentage]);
+
+  const calculateTip = () => {
+    const numericBill = parseFloat(bill) || 0;
+    const numericPpl = parseInt(ppl) || 0;
+
+    if (numericPpl <= 0) {
+      setError("Can't be zero.");
+      setTipPerPerson(0);
+      setTotalPerPerson(0);
+      return;
+    }
+    setError("");
+
+    const tipAmount = (numericBill * tipPercentage) / 100;
+    const totalAmount = numericBill + tipAmount;
+    
+    setTipPerPerson(Math.floor((tipAmount / numericPpl) * 100) / 100);
+    setTotalPerPerson(Math.floor((totalAmount / numericPpl) * 100) / 100);
+  };
+
+  const handleReset = () => {
+    setBill("");
+    setPpl("");
+    setTipPercentage(0);
+    setTipPerPerson(0);
+    setTotalPerPerson(0);
+    setError("");
+  };
+
+  return (
+    <div className="bg-cyan-100 flex flex-col justify-center items-center min-h-screen p-4 sm:p-8 font-[family-name:var(--font-space-mono)]">
+      <div>
+        <Header />
+      </div>
+      <div className="flex flex-col mt-20 lg:flex-row bg-white rounded-3xl w-full max-w-[800px] p-4 sm:p-7 gap-6 shadow-lg">
+        
+        {/* Left Half */}
+        <div className="flex flex-col w-full lg:w-1/2 gap-5">
+          <div>
+            <h3 className="text-md text-cyan-800">Bill</h3>
+            <TipInput
+              icon={<DollarSign size={16} />}
+              placeholder="0"
+              value={bill}
+              onChange={(e) => setBill(e.target.value)}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
+          <div>
+            <h3 className="text-md text-cyan-800 mb-2">Select Tip %</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[5, 10, 15, 20, 25].map((perc, index) => (
+                <TipButton key={index} perc={perc} selected={tipPercentage === perc} onClick={() => setTipPercentage(perc)} />
+              ))}
+              <Input
+                type="number"
+                placeholder="Custom"
+                className="w-full h-full text-2xl text-right font-bold bg-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
+                onChange={(e) => setTipPercentage(parseFloat(e.target.value) || 0)}
+              />
+            </div>
+          </div>
+          <div className="relative">
+            <div className="flex justify-between relative">
+              <h3 className="text-md text-cyan-800">Number of People</h3>
+              {error && <p className="text-red-500 text-sm absolute right-0 top-1">{error}</p>}
+            </div>
+            <TipInput
+              icon={<User size={16} />}
+              placeholder="0"
+              value={ppl}
+              onChange={(e) => setPpl(e.target.value)}
+            />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Right Half */}
+        <div className="w-full lg:w-1/2 bg-teal-900 p-6 rounded-3xl flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between mb-3">
+              <div>
+                <h4 className="text-white font-bold text-sm">Tip Amount</h4>
+                <h5 className="text-gray-400 text-sm">/ person</h5>
+              </div>
+              <h1 className="font-bold text-4xl text-teal-500">${tipPerPerson.toFixed(2)}</h1>
+            </div>
+            <div className="flex justify-between">
+              <div>
+                <h4 className="text-white font-bold text-sm">Total</h4>
+                <h5 className="text-gray-400 text-sm">/ person</h5>
+              </div>
+              <h1 className="font-bold text-4xl text-teal-500">${totalPerPerson.toFixed(2)}</h1>
+            </div>
+          </div>
+          <Button
+            disabled={!bill || !ppl || parseFloat(bill) === 0 || parseInt(ppl) === 0}
+            className="font-bold text-xl bg-teal-500 text-teal-900 w-full hover:bg-teal-200 mt-4"
+            onClick={handleReset}
+          >
+            RESET
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
